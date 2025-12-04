@@ -1,7 +1,7 @@
 package malstring
 
 type InjectionResult struct {
-	SQLi                 bool `json:"sql_injection"`
+	// SQLi                 bool `json:"sql_injection"`
 	CommandInjection     bool `json:"command_injection"`
 	PathTraversal        bool `json:"path_traversal"`
 	ScriptInjection      bool `json:"script_injection"`
