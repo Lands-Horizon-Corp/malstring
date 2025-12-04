@@ -1,6 +1,7 @@
 package test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -137,7 +138,7 @@ func TestCommandDetector_AdvancedPatterns(t *testing.T) {
 func TestCommandDetector_ReDoSResistance(t *testing.T) {
 	detector := detectors.NewCmd()
 
-	// Test patterns that could cause ReDoS
+	// Test patterns that could cause ReDoS and catastrophic backtracking
 	tests := []struct {
 		name  string
 		input string
@@ -148,6 +149,15 @@ func TestCommandDetector_ReDoSResistance(t *testing.T) {
 		{"Excessive ampersands", "&" + string(make([]byte, 500)) + "&"},
 		{"Long environment var", "${" + string(make([]byte, 100)) + "}"},
 		{"Repeated pipes", "|" + string(make([]byte, 300)) + "|"},
+		// Catastrophic backtracking patterns
+		{"Catastrophic nested groups", "$((((((((((((((((" + string(make([]byte, 100)) + ")))))))))))))))))))"},
+		{"Catastrophic alternation", strings.Repeat("a|", 1000) + "a"},
+		{"Catastrophic quantifier nesting", "(" + strings.Repeat("a*", 50) + ")" + strings.Repeat("b", 100)},
+		{"Catastrophic overlapping quantifiers", strings.Repeat("(a+)+", 20) + strings.Repeat("a", 100)},
+		{"Catastrophic backref patterns", strings.Repeat("(.*)*", 10) + strings.Repeat("x", 100)},
+		{"Catastrophic mixed patterns", ";" + strings.Repeat("((a*)*)*", 5) + strings.Repeat("b", 200)},
+		{"Catastrophic command chains", strings.Repeat("; ", 500) + "echo"},
+		{"Catastrophic environment vars", strings.Repeat("${", 100) + strings.Repeat("a", 200) + strings.Repeat("}", 100)},
 	}
 
 	for _, tt := range tests {
@@ -165,10 +175,10 @@ func TestCommandDetector_ReDoSResistance(t *testing.T) {
 			case <-done:
 				duration := time.Since(start)
 				if duration > 100*time.Millisecond {
-					t.Errorf("ReDoS test '%s' took too long: %v", tt.name, duration)
+					t.Errorf("ReDoS/Catastrophic backtracking test '%s' took too long: %v", tt.name, duration)
 				}
 			case <-time.After(100 * time.Millisecond):
-				t.Errorf("ReDoS test '%s' timed out (potential ReDoS vulnerability)", tt.name)
+				t.Errorf("ReDoS/Catastrophic backtracking test '%s' timed out (potential vulnerability)", tt.name)
 			}
 		})
 	}

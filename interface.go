@@ -25,7 +25,6 @@ type InjectionResult struct {
 	Shellshock           bool `json:"shellshock"`
 	JWTTamper            bool `json:"jwt_tamper"`
 	EmailInjection       bool `json:"email_injection"`
-	Base64Payload        bool `json:"base64_payload"`
 	ReDoS                bool `json:"redos"`
 	FuzzingSignature     bool `json:"fuzzing_signature"`
 	BinaryPayload        bool `json:"binary_payload"`
